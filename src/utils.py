@@ -1,24 +1,23 @@
-import os 
-from pathlib import Path
+import os
 import shutil
 import random
+from pathlib import Path
 from typing import Union, Dict
 from ultralytics import YOLO
 import onnx
+from .config import DATASET_CONFIG, MODEL_PATHS, WORKSPACE_NAME, PROJECT_NAME, ROBOFLOW_API
 
 random.seed(42)
 
-def create_dataset(input_dir: Union[str, Path], annos_dir: Union[str, Path], output_dir: Union[str, Path], val_split=0.2):
-    input_dir = Path(input_dir)
-    annos_dir = Path(annos_dir)
-    output_dir = Path(output_dir)
+def create_dataset(val_split: float = 0.2):
+    input_dir = Path(DATASET_CONFIG.get("input_dir", "images/"))
+    annos_dir = Path(DATASET_CONFIG.get("annos_dir", "annotations/"))
+    output_dir = Path(DATASET_CONFIG.get("output_dir", "dataset/"))
 
-    # Define train/val image + label directories
     for split in ["train", "val"]:
         (output_dir / split / "images").mkdir(parents=True, exist_ok=True)
         (output_dir / split / "labels").mkdir(parents=True, exist_ok=True)
 
-    # Gather all image files
     image_files = list(input_dir.glob("*.jpg")) + list(input_dir.glob("*.png"))
     random.shuffle(image_files)
 
@@ -32,10 +31,7 @@ def create_dataset(input_dir: Union[str, Path], annos_dir: Union[str, Path], out
             if not label_path.exists():
                 print(f"[WARNING] Missing label for: {img_path.name}")
                 continue
-
-            # Copy image
             shutil.copy2(img_path, output_dir / split / "images" / img_path.name)
-            # Copy label
             shutil.copy2(label_path, output_dir / split / "labels" / label_path.name)
 
     process(train_images, "train")
@@ -46,12 +42,14 @@ def create_dataset(input_dir: Union[str, Path], annos_dir: Union[str, Path], out
     print(f" - Validation images: {len(val_images)}")
 
 
-def log_model_comparisons(models: Union[dict, Dict[str, str]], gflops_map: Union[dict, Dict[str, float]], log_file: str = "model_comparison_log.txt"):
-    with open(log_file, "w") as f:        
-        for name, path in models.items():
-            print(f"Loading model: {name}, from path: {path}")  # Add this
+def log_model_comparisons(gflops_map: Dict[str, float], log_file: str = "model_comparison_log.txt"):
+    data_yaml = DATASET_CONFIG.get("data_yaml", "./dataset/data.yaml")
+
+    with open(log_file, "w") as f:
+        for name, path in MODEL_PATHS.items():
+            print(f"Validating model: {name}, path: {path}")
             model = YOLO(path)
-            metrics = model.val(data="./palcode-ai-1/data.yaml")
+            metrics = model.val(data=data_yaml)
 
             f.write(f"\n{'='*40}\n{name} Validation Results\n{'='*40}\n")
             f.write(f"Parameters: {sum(p.numel() for p in model.model.parameters())}\n")
@@ -68,16 +66,16 @@ def log_model_comparisons(models: Union[dict, Dict[str, str]], gflops_map: Union
             f.write(f"mAP@50: {metrics.box.map50:.3f}\n")
             f.write(f"mAP@50-95: {metrics.box.map:.3f}\n")
 
-def export_models_to_weights_dir(model_paths: dict, output_dir: str = "weights"):
+
+def export_models_to_weights_dir(output_dir: str = "weights"):
     os.makedirs(output_dir, exist_ok=True)
 
-    for model_name, model_path in model_paths.items():
-        print(f"\nProcessing {model_name} from {model_path}...")
+    for model_name, model_path in MODEL_PATHS.items():
+        print(f"\nExporting {model_name} from {model_path}...")
 
-        # Load the YOLO model
         model = YOLO(model_path)
 
-        # Copy .pt file with renamed filename
+        # Copy .pt file
         pt_dest = os.path.join(output_dir, f"{model_name.lower()}.pt")
         shutil.copy(model_path, pt_dest)
         print(f"Saved: {pt_dest}")
@@ -87,26 +85,9 @@ def export_models_to_weights_dir(model_paths: dict, output_dir: str = "weights")
         exported_onnx_path = os.path.join(output_dir, f"{model_name.lower()}.onnx")
         shutil.move(onnx_path, exported_onnx_path)
         print(f"Saved: {exported_onnx_path}")
-    
 
-# if __name__ == "__main__":
-#     input_dir = "./images/"
-#     annos_dir = "./annotations"
-#     output_dir = "./dataset"
-    
-#     # Usage
-#     gflops_map = {
-#         "YOLOv8n": 8.1,
-#         "YOLOv8s": 28.4,
-#         "YOLOv8m": 78.7
-#     }
-
-#     models = {
-#         "YOLOv8n": "runs/detect/train2/weights/best.pt",
-#         "YOLOv8s": "runs/detect/train3/weights/best.pt",
-#         "YOLOv8m": "runs/detect/train4/weights/best.pt"
-#     }
-#       
-#   create_dataset(input_dir, annos_dir, output_dir, val_split=0.2)
-#   log_model_comparisons(models, gflops_map)
-#   export_models_to_weights_dir(models)
+def init_roboflow(): 
+    from roboflow import Roboflow
+    rf = Roboflow(api_key=ROBOFLOW_API)
+    project = rf.workspace(WORKSPACE_NAME).project(PROJECT_NAME)
+    dataset = project.version(1).download("yolov5")

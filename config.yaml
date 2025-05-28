@@ -13,3 +13,6 @@ dataset:
   annos_dir: ./annotations/
   output_dir: ./dataset/
   data_yaml: ./dataset/data.yaml
+
+params: 
+  confidence_threshold: 0.5
