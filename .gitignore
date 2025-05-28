@@ -179,3 +179,4 @@ images/
 runs/
 palcode-ai-1/
 .env*.png
+*.png
