@@ -1,8 +1,8 @@
 # doors-and-windows
 
-A lightweight web application that detects **doors** and **windows** in architectural floor plans. 
+### More details into the report is present under `report.pdf`
 
-More details into the report is present under `report.pdf`
+A lightweight web application that detects **doors** and **windows** in architectural floor plans. 
 
 This application has been built using Streamlit for the front-end and supports three YOLO variants for the prediction, namely: 
 - YOLOv8n
