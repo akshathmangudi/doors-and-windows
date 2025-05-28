@@ -8,17 +8,22 @@ ENV PYTHONUNBUFFERED 1
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git ffmpeg libsm6 libxext6 libgl1 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy project files
+# Copy only relevant files
+COPY requirements.txt .
+
+# Install Python dependencies first (leverages Docker cache)
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Now copy the rest of the code (after installing deps for better caching)
 COPY . .
 
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# ✅ Explicitly copy the pretrained model weights if you're using them
+COPY models/ models/
 
 # Streamlit environment config
 ENV STREAMLIT_SERVER_HEADLESS=true

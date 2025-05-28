@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.DS_Store
+weights/         # pretrained COCO weights – will be downloaded or ignored
+.git/
+.gitignore
