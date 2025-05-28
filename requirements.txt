@@ -1,0 +1,9 @@
+streamlit
+ultralytics
+opencv-python
+opencv-python-headless
+Pillow
+numpy
+onnx
+fastapi
+python-dotenv

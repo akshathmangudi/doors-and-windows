@@ -1,7 +1,7 @@
 model_paths:
-  yolov8n: weights/yolov8n.pt
-  yolov8s: weights/yolov8s.pt
-  yolov8m: weights/yolov8m.pt
+  yolov8n: models/pt/yolov8n.pt
+  yolov8s: models/pt/yolov8s.pt
+  yolov8m: models/pt/yolov8m.pt
 
 gflops_map:
   YOLOv8n: 8.1
@@ -15,4 +15,4 @@ dataset:
   data_yaml: ./dataset/data.yaml
 
 params: 
-  confidence_threshold: 0.5
+  confidence_threshold: 0.1

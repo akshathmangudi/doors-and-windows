@@ -42,35 +42,47 @@ def read_image_bytes(image_bytes: bytes) -> np.ndarray:
     image = Image.open(BytesIO(image_bytes)).convert("RGB")
     return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-def run_detection(image_bytes: bytes, filename: str, model_name: str) -> Dict[str, Any]:
+def run_detection(image_bytes: bytes, filename: str, model_name: str, conf_threshold: float = None) -> Dict[str, Any]:
     """
     Perform detection using a YOLO model.
-
+    
     Args:
-        image_bytes (bytes): Raw image bytes.
+        image_bytes (bytes): Image file bytes.
         filename (str): Name of the uploaded file.
-        model_name (str): Key name for the model to use.
-
+        model_name (str): Name of the model to use.
+        conf_threshold (float, optional): Confidence threshold. Uses config default if None.
+    
     Returns:
-        dict: Structured detection output.
+        Dict[str, Any]: Detection results with filename and detections list.
     """
     model = load_model(model_name)
     image = read_image_bytes(image_bytes)
-    results = model(image, conf=CONFIDENCE_THRESHOLD)
+    
+    # Use provided threshold or fall back to config
+    threshold = conf_threshold if conf_threshold is not None else CONFIDENCE_THRESHOLD
+    
+    # Run inference with lower confidence to see if there are any detections
+    results = model.predict(image, conf=threshold, verbose=True)
 
     detections = []
     for result in results:
-        for box in result.boxes:
-            bbox = box.xyxy[0].tolist()
-            label = model.names[int(box.cls[0])]
-            confidence = float(box.conf[0])
-            detections.append({
-                "label": label,
-                "confidence": round(confidence, 3),
-                "bbox": [round(coord, 2) for coord in bbox]
-            })
+        if result.boxes is not None and len(result.boxes) > 0:
+            num_boxes = len(result.boxes)
+            for i in range(num_boxes):
+                cls_id = int(result.boxes.cls[i].item())
+                conf = float(result.boxes.conf[i].item())
+                bbox = result.boxes.xyxy[i].tolist()
+
+                detections.append({
+                    "label": model.names[cls_id],
+                    "confidence": round(conf, 3),
+                    "bbox": [round(coord, 2) for coord in bbox]
+                })
 
     return {
         "filename": filename,
-        "detections": detections
+        "detections": detections,
+        "total_detections": len(detections),
+        "confidence_threshold": threshold,
+        "image_shape": image.shape
     }

@@ -6,7 +6,7 @@ step 0: learn to read architecture plans to distinguish between doors and window
 1. annotate data and save the labels. (DONE)
 2. train the model, explain the difference between yolov8n and yolov8s, show which one is better. (DONE)
 4. api development: will be a little hard. (DONE)
-5. full cleanup (DONE) + streamlit setup 
+5. full cleanup (DONE) + streamlit setup (DONE)
 6. deployment onto hf spaces + docker.
 
 extras:

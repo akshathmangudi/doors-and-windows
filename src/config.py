@@ -1,5 +1,8 @@
+import os
 import yaml
+
 from pathlib import Path
+from dotenv import load_dotenv
 load_dotenv()
 
 # Load YAML config
@@ -17,3 +20,4 @@ DATASET_CONFIG = config.get("palcode-ai-1", {})
 ROBOFLOW_API = os.getenv("ROBOFLOW_API")
 WORKSPACE_NAME = os.getenv("WORKSPACE_NAME")
 PROJECT_NAME = os.getenv("PROJECT_NAME")
+DEBUG = True
