@@ -4,9 +4,10 @@ an application that serves inference to detect doors and windows from architectu
 step 0: learn to read architecture plans to distinguish between doors and windows. (DONE)
 
 1. annotate data and save the labels. (DONE)
-2. train the model, explain the difference between 3. yolov8n and yolov8s, show which one is better.
-4. api development: will be a little hard.
-5. deployment onto hf spaces.
+2. train the model, explain the difference between yolov8n and yolov8s, show which one is better. (DONE)
+4. api development: will be a little hard. (DONE)
+5. full cleanup
+6. deployment onto hf spaces + docker.
 
 extras:
 

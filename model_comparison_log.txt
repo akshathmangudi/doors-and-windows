@@ -1,0 +1,45 @@
+
+========================================
+YOLOv8n Validation Results
+========================================
+Parameters: 3006038
+GFLOPs: 8.1
+Speed (inference): 32.65 ms/image
+
+Class     | Precision | Recall
+0          | 0.945     | 0.206
+1          | 1.000     | 0.000
+
+Overall:
+mAP@50: 0.231
+mAP@50-95: 0.119
+
+========================================
+YOLOv8s Validation Results
+========================================
+Parameters: 11126358
+GFLOPs: 28.4
+Speed (inference): 74.78 ms/image
+
+Class     | Precision | Recall
+0          | 0.682     | 0.559
+1          | 0.290     | 0.267
+
+Overall:
+mAP@50: 0.411
+mAP@50-95: 0.239
+
+========================================
+YOLOv8m Validation Results
+========================================
+Parameters: 25840918
+GFLOPs: 78.7
+Speed (inference): 158.06 ms/image
+
+Class     | Precision | Recall
+0          | 0.807     | 0.559
+1          | 0.165     | 0.433
+
+Overall:
+mAP@50: 0.406
+mAP@50-95: 0.235

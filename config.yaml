@@ -1,0 +1,15 @@
+model_paths:
+  yolov8n: weights/yolov8n.pt
+  yolov8s: weights/yolov8s.pt
+  yolov8m: weights/yolov8m.pt
+
+gflops_map:
+  YOLOv8n: 8.1
+  YOLOv8s: 28.4
+  YOLOv8m: 78.7
+
+dataset:
+  input_dir: ./images/
+  annos_dir: ./annotations/
+  output_dir: ./dataset/
+  data_yaml: ./dataset/data.yaml

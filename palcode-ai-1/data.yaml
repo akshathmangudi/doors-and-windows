@@ -1,0 +1,13 @@
+names:
+- door
+- window
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: palcode-ai
+  url: https://universe.roboflow.com/testingmodels/palcode-ai/dataset/1
+  version: 1
+  workspace: testingmodels
+test: ../test/images
+train: train/images
+val: valid/images
