@@ -1,0 +1,69 @@
+openapi: 3.1.0
+info:
+  title: Blueprint Object Detection API
+  description: API for detecting doors and windows in architectural floorplans using YOLOv8 models.
+  version: 1.0.0
+
+paths:
+  /detect:
+    post:
+      summary: Detect doors and windows in a floorplan image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - model_name
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The blueprint image file (JPG/PNG).
+                model_name:
+                  type: string
+                  enum: [yolov8n, yolov8s, yolov8m]
+                  description: The YOLOv8 model variant to use.
+      responses:
+        "200":
+          description: Successful detection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label:
+                          type: string
+                          example: door
+                        confidence:
+                          type: number
+                          format: float
+                          example: 0.87
+                        bbox:
+                          type: array
+                          items:
+                            type: number
+                          minItems: 4
+                          maxItems: 4
+                          description: Bounding box in [x1, y1, x2, y2] format
+                  image_size:
+                    type: array
+                    items:
+                      type: integer
+                    description: Width and height of the original image
+                  model_used:
+                    type: string
+        "400":
+          description: Invalid input (e.g., missing file or model)
+        "500":
+          description: Internal server error
+
+components:
+  securitySchemes: {}

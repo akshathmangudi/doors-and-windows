@@ -1,15 +1,23 @@
-# app/detection.py
+"""
+The script that contains the driver code behind app.py. This file contains methods for:
+- loading the model
+- reading the image during inference (from streamlit)
+- running the detection itself.
+"""
 
-from ultralytics import YOLO
-import numpy as np
-import cv2
 from io import BytesIO
+from typing import Any, Dict
+
+import cv2
+import numpy as np
 from PIL import Image
-from typing import List, Dict, Any
-from .config import MODEL_PATHS, CONFIDENCE_THRESHOLD
+from ultralytics import YOLO
+
+from .config import CONFIDENCE_THRESHOLD, MODEL_PATHS
 
 # Global model cache
 MODEL_CACHE = {}
+
 
 def load_model(model_name: str) -> YOLO:
     """
@@ -29,6 +37,7 @@ def load_model(model_name: str) -> YOLO:
 
     return MODEL_CACHE[model_name]
 
+
 def read_image_bytes(image_bytes: bytes) -> np.ndarray:
     """
     Converts uploaded image bytes to a NumPy array.
@@ -42,26 +51,27 @@ def read_image_bytes(image_bytes: bytes) -> np.ndarray:
     image = Image.open(BytesIO(image_bytes)).convert("RGB")
     return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-def run_detection(image_bytes: bytes, filename: str, model_name: str, conf_threshold: float = None) -> Dict[str, Any]:
+
+def run_detection(
+    image_bytes: bytes, filename: str, model_name: str, conf_threshold: float = None
+) -> Dict[str, Any]:
     """
     Perform detection using a YOLO model.
-    
+
     Args:
         image_bytes (bytes): Image file bytes.
         filename (str): Name of the uploaded file.
         model_name (str): Name of the model to use.
         conf_threshold (float, optional): Confidence threshold. Uses config default if None.
-    
+
     Returns:
         Dict[str, Any]: Detection results with filename and detections list.
     """
     model = load_model(model_name)
     image = read_image_bytes(image_bytes)
-    
+
     # Use provided threshold or fall back to config
     threshold = conf_threshold if conf_threshold is not None else CONFIDENCE_THRESHOLD
-    
-    # Run inference with lower confidence to see if there are any detections
     results = model.predict(image, conf=threshold, verbose=True)
 
     detections = []
@@ -73,16 +83,18 @@ def run_detection(image_bytes: bytes, filename: str, model_name: str, conf_thres
                 conf = float(result.boxes.conf[i].item())
                 bbox = result.boxes.xyxy[i].tolist()
 
-                detections.append({
-                    "label": model.names[cls_id],
-                    "confidence": round(conf, 3),
-                    "bbox": [round(coord, 2) for coord in bbox]
-                })
+                detections.append(
+                    {
+                        "label": model.names[cls_id],
+                        "confidence": round(conf, 3),
+                        "bbox": [round(coord, 2) for coord in bbox],
+                    }
+                )
 
     return {
         "filename": filename,
         "detections": detections,
         "total_detections": len(detections),
         "confidence_threshold": threshold,
-        "image_shape": image.shape
+        "image_shape": image.shape,
     }

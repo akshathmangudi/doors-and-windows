@@ -1,15 +1,32 @@
+"""
+The script that contains the necessary util functions for the whole pipeline.
+
+This file contains methods for:
+- creating the dataset.
+- logging model performances onto a text file.
+- exporting .pt and onnx-type weights to a specified directory.
+"""
+
 import os
-import shutil
 import random
+import shutil
 from pathlib import Path
-from typing import Union, Dict
+from typing import Dict
+
 from ultralytics import YOLO
-import onnx
-from .config import DATASET_CONFIG, MODEL_PATHS, WORKSPACE_NAME, PROJECT_NAME, ROBOFLOW_API
+
+from .config import DATASET_CONFIG, MODEL_PATHS
 
 random.seed(42)
 
-def create_dataset(val_split: float = 0.2):
+
+def create_dataset(val_split: float = 0.2) -> None:
+    """
+    Splits images and annotations into training and validation datasets.
+
+    Args:
+        val_split (float): Fraction of data to reserve for validation. Default is 0.2.
+    """
     input_dir = Path(DATASET_CONFIG.get("input_dir", "images/"))
     annos_dir = Path(DATASET_CONFIG.get("annos_dir", "annotations/"))
     output_dir = Path(DATASET_CONFIG.get("output_dir", "dataset/"))
@@ -42,10 +59,19 @@ def create_dataset(val_split: float = 0.2):
     print(f" - Validation images: {len(val_images)}")
 
 
-def log_model_comparisons(gflops_map: Dict[str, float], log_file: str = "model_comparison_log.txt"):
+def log_model_comparisons(
+    gflops_map: Dict[str, float], log_file: str = "model_comparison_log.txt"
+) -> None:
+    """
+    Logs performance metrics for each YOLO model variant to a file.
+
+    Args:
+        gflops_map (Dict[str, float]): Mapping from model names to their GFLOPs.
+        log_file (str): Path to the output log file. Default is 'model_comparison_log.txt'.
+    """
     data_yaml = DATASET_CONFIG.get("data_yaml", "./dataset/data.yaml")
 
-    with open(log_file, "w") as f:
+    with open(log_file, "w", encoding="utf-8") as f:
         for name, path in MODEL_PATHS.items():
             print(f"Validating model: {name}, path: {path}")
             model = YOLO(path)
@@ -67,7 +93,13 @@ def log_model_comparisons(gflops_map: Dict[str, float], log_file: str = "model_c
             f.write(f"mAP@50-95: {metrics.box.map:.3f}\n")
 
 
-def export_models_to_weights_dir(output_dir: str = "weights"):
+def export_models_to_weights_dir(output_dir: str = "weights") -> None:
+    """
+    Exports YOLO model weights in both .pt and ONNX formats to the specified directory.
+
+    Args:
+        output_dir (str): Directory to save the exported model weights. Default is 'weights'.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     for model_name, model_path in MODEL_PATHS.items():
@@ -85,9 +117,3 @@ def export_models_to_weights_dir(output_dir: str = "weights"):
         exported_onnx_path = os.path.join(output_dir, f"{model_name.lower()}.onnx")
         shutil.move(onnx_path, exported_onnx_path)
         print(f"Saved: {exported_onnx_path}")
-
-def init_roboflow(): 
-    from roboflow import Roboflow
-    rf = Roboflow(api_key=ROBOFLOW_API)
-    project = rf.workspace(WORKSPACE_NAME).project(PROJECT_NAME)
-    dataset = project.version(1).download("yolov5")

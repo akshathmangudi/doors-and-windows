@@ -7,3 +7,8 @@ numpy
 onnx
 fastapi
 python-dotenv
+
+# for linting and formatting
+pylint
+isort
+black 
